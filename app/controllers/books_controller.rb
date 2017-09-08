@@ -1,5 +1,7 @@
 class BooksController < ApplicationController
   before_action :set_book, only: [:show, :edit, :update, :destroy]
+  #before_action :permitted, only:[:edit,:destroy]
+  before_action :check_ownership, only: [:edit, :update, :destory]
 
   # GET /books
   # GET /books.json
@@ -21,11 +23,18 @@ class BooksController < ApplicationController
   def edit
   end
 
+  # def permitted
+  #   @book = Book.find(params[:id])
+  #       if !@book.user == current_user then
+  #       flash[:notice] = "You are not the creator of this book, therefore you're not permitted to edit or either to destroy this book"
+  #   end
+  # end
+
   # POST /books
   # POST /books.json
   def create
     @book = Book.new(book_params)
-
+    @book.user_id = current_user.id
     respond_to do |format|
       if @book.save
         format.html { redirect_to @book, notice: 'Book was successfully created.' }
@@ -65,6 +74,13 @@ class BooksController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_book
       @book = Book.find(params[:id])
+    end
+
+    def check_ownership
+      unless @book.user == current_user
+        flash[:notice] = "You are not the creator of this book, therefore you're not permitted to edit or either to destroy this book"
+        redirect_to books_path
+      end
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
